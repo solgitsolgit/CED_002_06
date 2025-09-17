@@ -14,10 +14,10 @@ void loop() {
   Serial.println(lightValue); // 시리얼 프린터에 출력
 
   if (lightValue > Threshold) {
-    digitalWrite(LedPin, HIGH); // 값이 임계값보다 낮으면 Led 켜기
+    digitalWrite(LedPin, HIGH); // 값이 임계값보다 높으면 Led 켜기
   }
   else {
-    digitalWrite(LedPin, LOW); // 값이 임계값보다 높으면 Led 끄기
+    digitalWrite(LedPin, LOW); // 값이 임계값보다 낮으면 Led 끄기
   }
 
   delay(100);
