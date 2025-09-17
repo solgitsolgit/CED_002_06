@@ -18,19 +18,19 @@ void loop() {
   sensorValue = analogRead(mic_analog_in);
 
   //각 센서 값에 따라 출력값 결정
-  if(sensorValue < 30) {
+  if(sensorValue < 480) {
     digitalWrite(LED3_pin, HIGH);
   } else {
     digitalWrite(LED3_pin, LOW);
   }
 
-  if(sensorValue > 30 && sensorValue < 60) {
+  if(sensorValue > 480 && sensorValue < 495) {
     digitalWrite(LED4_pin, HIGH);
   } else {
     digitalWrite(LED4_pin, LOW);
   }
 
-  if(sensorValue > 60) {
+  if(sensorValue > 495) {
     digitalWrite(LED5_pin, HIGH);
   } else {
     digitalWrite(LED5_pin, LOW);
