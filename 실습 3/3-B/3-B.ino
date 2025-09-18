@@ -8,12 +8,14 @@ void setup() {
 
 void loop() {
   int reading = analogRead(light);
-  //값을 받아들여 500 이상으로 어두워지면 불을 키고 아니면 끄기
-    if(reading>500){
+  //값을 받아들여 250 이상으로 어두워지면 불을 키고 아니면 끄기
+    if(reading>250){
       digitalWrite(ledpin, HIGH);
     } else{
       digitalWrite(ledpin, LOW);
     }
+  Serial.println(reading);
+  delay(1000);
 }
 
 // CED 002, group 06, 2020-14247 강신의
