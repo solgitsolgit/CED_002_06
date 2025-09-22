@@ -6,7 +6,7 @@ const int RedPin = 5;
 const int YellowPin = 6;
 const int GreenPin = 7;
 
-const int Threshold = 600; // 광센서 임계값 설정
+const int Threshold = 250; // 광센서 임계값 설정
 
 void setup() {
   pinMode(MicPin, INPUT);
@@ -41,7 +41,6 @@ void loop() {
     digitalWrite(GreenPin, LOW);
   }
   // 광센서에 신호가 들어오면 GreenLed 점등
-
   delay(1000);
 }
 
