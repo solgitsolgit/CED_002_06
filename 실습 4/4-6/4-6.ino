@@ -1,6 +1,5 @@
 //실험 5: GPS모듈로부터 신호수신
 #include <SoftwareSerial.h>
-
 #include <TinyGPS.h>
 
 /* This sample code demonstrates the normal use of a TinyGPS object.
@@ -28,7 +27,7 @@ void setup()
   Serial.println("          (deg)     (deg)      Age                      Age  (m)    --- from GPS ----  ---- to London  ----  RX    RX        Fail");
   Serial.println("-------------------------------------------------------------------------------------------------------------------------------------");
 
-  ss.begin(9600)
+  ss.begin(9600);
 }
 
 void loop()

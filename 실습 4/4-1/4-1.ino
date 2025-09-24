@@ -1,5 +1,6 @@
 #define TRIGGER_PIN 12
 #define ECHO_PIN 11
+
 void setup()
 {
     Serial.begin(9600);
@@ -15,7 +16,8 @@ void loop()
     duration = pulseIn(ECHO_PIN, HIGH); // Echo pin: HIGH -> LOW 간격을 측정
     cm = microsecondsToCentimeters(duration); //거리(cm) 단위 변환
     Serial.print(cm);
-    Serial.print("cm"); Serial.println();
+    Serial.print("cm");
+    Serial.println();
     delay(300); // 0.3초 대기후 다시 측정
 }
 
