@@ -12,7 +12,9 @@ void loop()
     digitalWrite(TRIGGER_PIN, HIGH); // 센서에 Trig 신호 입력
     delayMicroseconds(10); // 10us 저도 유지
     digitalWrite(TRIGGER_PIN, LOW); // Trig 신호 off
-    duration = pulseIn(ECHO_PIN, HIGH); // Echo pin: HIGH -> LOW 간격을 측정 cm = microsecondsToCentimeters(duration); //거리(cm) 단위 변환 Serial.print(cm);
+    duration = pulseIn(ECHO_PIN, HIGH); // Echo pin: HIGH -> LOW 간격을 측정
+    cm = microsecondsToCentimeters(duration); //거리(cm) 단위 변환
+    Serial.print(cm);
     Serial.print("cm"); Serial.println();
     delay(300); // 0.3초 대기후 다시 측정
 }
