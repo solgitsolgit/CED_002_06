@@ -4,7 +4,8 @@
 void setup()
 {
     Serial.begin(9600);
-    pinMode(TRIGGER_PIN, OUTPUT); // 센서 Trig 핀 = D12 pinMode(ECHO_PIN, INPUT); // 센서 Echo 핀 = D11
+    pinMode(TRIGGER_PIN, OUTPUT); // 센서 Trig 핀 = D12 
+    pinMode(ECHO_PIN, INPUT); // 센서 Echo 핀 = D11
 }
 
 void loop()
