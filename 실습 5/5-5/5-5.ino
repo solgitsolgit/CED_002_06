@@ -94,7 +94,6 @@ void setup(){
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() with NEW key failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
-    // 여기서 복원이 불가하면 카드에 잠길 수 있으니 매우 조심
     mfrc522.PICC_HaltA();
     return;
   }
