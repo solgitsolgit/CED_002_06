@@ -1,4 +1,4 @@
-//라인트레이어 센서의 핀 번호 설정
+//라인트레이서 센서의 핀 번호 설정
 #define leftSensorPin A0
 #define centerSensorPin A1
 #define rightSensorPin A2
@@ -18,7 +18,9 @@ void loop() {
 
 // 시리얼 모니터에 값 출력
   Serial.print(leftSensorValue);
+  Serial.print(" ");
   Serial.print(centerSensorValue);
+  Serial.print(" ");
   Serial.println(rightSensorValue);
 
   delay(100);
