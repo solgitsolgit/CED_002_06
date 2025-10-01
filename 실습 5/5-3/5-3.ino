@@ -114,13 +114,13 @@ void loop() {
   Serial.println(F("Please remove card..."));
   // 카드가 제거될 때까지 기다림
   while (mfrc522.PICC_IsNewCardPresent()) {
-    delay(10000);
+    delay(1000);
   }
   Serial.println(F("Card removed. Ready for next."));
 
 
   // 잠깐 대기 (중복 쓰기 방지)
-  delay(100000);
+  delay(1000);
 }
 // CED 002, group 06, 2020-14247 강신의
 // CED 002, group 06, 2023-14669 임태현
