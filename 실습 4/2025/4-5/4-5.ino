@@ -3,6 +3,8 @@
 
 ADXL345 acc;
 
+
+//변수선언
 int sw = 3;
 int buzzer = 4;
 unsigned long start_time = 0, elapsed_time = 0;
@@ -12,13 +14,16 @@ double Xg, Yg, Zg;
 double bXg = 0, bYg = 0, bZg = 0;
 int count = 0, motion = 0;
 
+
+//가속도 센서가 측정값에 변화를 받아들였을 때 인터럽트 발생
 void detectMotion() {
   motion = 1;
-  delay(100);
+  //Serial.println("asd");
 }
 
 void switchFn() {
   state = !state;
+  Serial.println("game start!");
   elapsed_time = millis();
 }
 
@@ -32,6 +37,8 @@ void setup() {
   attachInterrupt(1, switchFn, FALLING);
 }
 
+
+//인터럽트 발생 시 Xg Yg Zg 측정하여 저장
 void loop() {
   if (digitalRead(3) == 0) {
     tone(buzzer, 300, 1000);
@@ -45,25 +52,22 @@ void loop() {
     bYg = Yg;
     bZg = Zg;
 
-    if (motion == 1) {
-      if ((bXg * bXg + bYg * bYg + bZg * bZg) > 1000) {
+    if (1) {
+      if ((bXg * bXg + bYg * bYg + bZg * bZg) > 2) {
         count++;
-        Serial.print("number of times : ");
+        Serial.print("number of steps : ");
+        //Serial.println(bXg * bXg + bYg * bYg + bZg * bZg);
+        delay(500);
         Serial.println(count);
       }
       motion = 0;
     }
 
     if ((start_time - elapsed_time) >= 30000) {
-      count = 0;
+      count = 0;  //숫자 리셋
       state = 0;
       tone(buzzer, 300, 1000);
+      Serial.println("game end.");
     }
   }
 }
-
-
-
-// CED 002, group 06, 2020-14247 강신의
-// CED 002, group 06, 2023-14669 임태현
-// CED 002, group 06, 2025-17066 김정환
