@@ -49,10 +49,9 @@ void setup() {
   // if the file opened okay, write to it:
   if (myFile) {
     Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    myFile.println("2020-14247 강신의");
-    myFile.println("2023-14669 임태현");
-    myFile.println("2025-17066 김정환");
+    myFile.println("2020-14247 // ShinYee Kang");
+    myFile.println("2023-14669 // TaeHyun Lim");
+    myFile.println("2025-17066 // JungHwan Kim");
     // close the file:
     myFile.close();
     Serial.println("done.");
