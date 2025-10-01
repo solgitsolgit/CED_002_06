@@ -3,8 +3,6 @@
 
 ADXL345 acc;
 
-
-//변수선언
 int sw = 3;
 int buzzer = 4;
 unsigned long start_time = 0, elapsed_time = 0;
@@ -14,10 +12,9 @@ double Xg, Yg, Zg;
 double bXg = 0, bYg = 0, bZg = 0;
 int count = 0, motion = 0;
 
-
-//가속도 센서가 측정값에 변화를 받아들였을 때 인터럽트 발생
 void detectMotion() {
   motion = 1;
+  delay(100);
 }
 
 void switchFn() {
@@ -35,8 +32,6 @@ void setup() {
   attachInterrupt(1, switchFn, FALLING);
 }
 
-
-//인터럽트 발생 시 Xg Yg Zg 측정하여 저장
 void loop() {
   if (digitalRead(3) == 0) {
     tone(buzzer, 300, 1000);
@@ -51,21 +46,23 @@ void loop() {
     bZg = Zg;
 
     if (motion == 1) {
-      if ((bXg * bXg + bYg * bYg + bZg * bZg) > 2) {
+      if ((bXg * bXg + bYg * bYg + bZg * bZg) > 1000) {
         count++;
-        Serial.print("number of steps : ");
+        Serial.print("number of times : ");
         Serial.println(count);
       }
       motion = 0;
     }
 
     if ((start_time - elapsed_time) >= 30000) {
-      count = 0;  //숫자 리셋
+      count = 0;
       state = 0;
       tone(buzzer, 300, 1000);
     }
   }
 }
+
+
 
 // CED 002, group 06, 2020-14247 강신의
 // CED 002, group 06, 2023-14669 임태현
