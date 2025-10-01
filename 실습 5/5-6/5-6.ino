@@ -20,7 +20,7 @@
 */
 #include <SD.h>
 
-const int chipSelect = 10;
+const int chipSelect = 4;
 File myFile;
 
 void setup() {
