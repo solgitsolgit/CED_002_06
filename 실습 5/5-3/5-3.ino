@@ -18,6 +18,8 @@ void setup() {
 }
 
 void loop() {
+  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+
   // 카드가 있는지 확인
   if (!mfrc522.PICC_IsNewCardPresent()) return;
   if (!mfrc522.PICC_ReadCardSerial()) return;
@@ -114,13 +116,13 @@ void loop() {
   Serial.println(F("Please remove card..."));
   // 카드가 제거될 때까지 기다림
   while (mfrc522.PICC_IsNewCardPresent()) {
-    delay(1000);
+    delay(1);
   }
   Serial.println(F("Card removed. Ready for next."));
 
 
   // 잠깐 대기 (중복 쓰기 방지)
-  delay(1000);
+  delay(1);
 }
 // CED 002, group 06, 2020-14247 강신의
 // CED 002, group 06, 2023-14669 임태현
