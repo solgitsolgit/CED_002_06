@@ -100,42 +100,6 @@ void serverTest()
       client.print("Team 06");
       client.print("<br>"); 
       client.print("KSY_LTH_KJH"); // 조원 이름
-      client.print("<br>");
-
-      // move to test
-      client.print("<br>");
-      client.print("<a href=./test>");
-      client.print("move to test");
-      client.print("</a>");
-      client.print("<br>");
-  
-      client.print("</font>");
-      client.print("</body>"); 
-      client.print("</html>");
-    }
-
-    else if (req.equals("/test")) 
-    {
-      client.print(htmlHeader);
-      client.print("<head>");
-      client.print("<title>");
-      client.print("Test Page"); // 페이지 제목
-      client.print("</title>");
-      client.print("</head>");
-  
-      client.print("<body bgcolor=#000000>"); // Body color = Black 
-      client.print("<font size=36 color=808080>"); // Font color = Grey
-
-      client.print("This is Test page");
-      client.print("<br>");
-      
-  // move to team_info
-      client.print("<br>");
-      client.print("<a href=./team_info>");
-      client.print("move to Team info");
-      client.print("</a>");
-      client.print("<br>");
-  
       client.print("</font>");
       client.print("</body>"); 
       client.print("</html>");

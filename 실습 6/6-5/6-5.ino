@@ -4,9 +4,8 @@
 #include <SoftwareSerial.h>
 
 // 테더링 설정
-const char *ssid = "No.3"; 
-const char *pass = "testtest"; 
-//IPAddress ip(192, 168, 1, 242);
+const char *ssid = "Taehyun"; 
+const char *pass = "12344321"; 
 ESP8266Server server(80);
 
 const char htmlHeader[] = "HTTP/1.1 200 OK\r\n"
@@ -34,9 +33,6 @@ void setup() {
   }
   Serial.println(wifi.firmwareVersion());
   Serial.print(F("Mode: "));Serial.println(wifi.getMode());// 1- station mode, 2- softap mode, 3- both
-  // Uncomment these 2 lines if you are using static IP Address
-  // Serial.println(F("Setup wifi config"));
-  // wifi.config(ip);
   Serial.println(F("Start wifi connection"));
   if(!wifi.connectAP(ssid, pass))
   {
@@ -57,7 +53,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   serverTest();
 }
 
@@ -138,7 +133,6 @@ void serverTest()
       client.print("This is Test page");
       client.print("<br>");
       
-  
       client.print("<br>");
       client.print("<a href=./team_info>");
       client.print("move to Team info");
