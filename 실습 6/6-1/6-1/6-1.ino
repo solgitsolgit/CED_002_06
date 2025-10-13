@@ -3,8 +3,8 @@
 #include <CytronWiFiServer.h>
 #include <SoftwareSerial.h>
 
-const char *ssid = "Taehyun";
-const char *pass = "12344321";
+const char *ssid = "No.3";
+const char *pass = "testtest";
 ESP8266Server server(80);
 
 const char htmlHeader[] = "HTTP/1.1 200 OK\r\n"

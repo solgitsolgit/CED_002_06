@@ -17,8 +17,8 @@ const char htmlHeader[] =
   "<html>\r\n";
 
 // ----- 핀/임계값 (LED_PIN=2, TH=500) -----
-const int LED_PIN = 2;
-const int LED_ON_THRESHOLD = 500;   // 주변 밝기에 맞춰 조정
+const int LED_PIN = 5;
+const int LED_ON_THRESHOLD = 52;   // 주변 밝기에 맞춰 조정
 
 // 디버그에 도움
 static String parsePathFromFirstLine(const String& firstLine) {
@@ -67,7 +67,7 @@ void serverTest() {
   String req = client.readStringUntil('\r');
   String path = parsePathFromFirstLine(req);
   Serial.print(F("Request: ")); Serial.println(path);
-  client.flush();
+  client.readString();
 
   if (path.equals("/favicon.ico")) {
     client.print("HTTP/1.1 404 Not Found\r\n\r\n");
