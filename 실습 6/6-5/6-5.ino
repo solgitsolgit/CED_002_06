@@ -1,4 +1,5 @@
 // ==== Lab6 Exp.5: HTTP server + LDR + LED ====
+// Cytron ESPWiFi Shield 기반
 #include <CytronWiFiShield.h>
 #include <CytronWiFiClient.h>
 #include <CytronWiFiServer.h>
@@ -16,13 +17,12 @@ const char htmlHeader[] =
   "<!DOCTYPE HTML>\r\n"
   "<html>\r\n";
 
-// ----- 핀/임계값 (LED_PIN=2, TH=500) -----
+// ----- 핀/임계값 -----
 const int LED_PIN = 5;
 const int LED_ON_THRESHOLD = 52;   // 주변 밝기에 맞춰 조정
 
-// 디버그에 도움
+// ----- path 파싱 -----
 static String parsePathFromFirstLine(const String& firstLine) {
-  // "GET /path HTTP/1.1" -> "/path"
   int s = firstLine.indexOf(' ');
   int e = (s >= 0) ? firstLine.indexOf(' ', s + 1) : -1;
   if (s < 0 || e < 0) return "/";
@@ -48,7 +48,7 @@ void setup() {
   Serial.print(F("Connected to ")); Serial.println(wifi.SSID());
   Serial.println(F("IP address: ")); Serial.println(wifi.localIP());
   wifi.updateStatus();
-  Serial.println(wifi.status()); // 2~5
+  Serial.println(wifi.status());
 
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
@@ -75,61 +75,74 @@ void serverTest() {
     return;
   }
 
-  // 조도 읽기(A0)
+  // 조도 읽기
   int sensed_light = analogRead(A0);
+  bool isBright = (sensed_light > LED_ON_THRESHOLD);
 
-  // 출력
+  // 색상 및 문구 설정
+  const char* bgColor = isBright ? "#F0FFFF" : "#000000";
+  const char* fontColor = isBright ? "#000000" : "#F0FFFF";
+  const char* roomMsg = isBright ? "Room is currently BRIGHT" : "Room is currently DARK";
+
+  // ====== 출력 시작 ======
   if (path.equals("/")) {
     client.print(htmlHeader);
+    client.print("<body bgcolor=");
+    client.print(bgColor);
+    client.print("><font size=5 color=");
+    client.print(fontColor);
+    client.print(">");
 
-    if (sensed_light > LED_ON_THRESHOLD) {
-      client.print("<body bgcolor=#F0FFFF>");
-      client.print("<font size=5 color=#000000>");
-      client.print("Room is currently BRIGHT");
-      client.print("<br>");
-    } else {
-      client.print("<body bgcolor=#000000>");
-      client.print("<font size=5 color=#F0FFFF>");
-      client.print("Room is currently DARK");
-      client.print("<br>");
-    }
-
+    // --- 본문 ---
+    client.print("CED 002, Group 06<br>");
+    client.print("Room is currently ");
+    client.print(isBright ? "BRIGHT" : "DARK");
+    client.print("<br>");
     client.print("LDR value: ");
     client.print(sensed_light);
-    client.print("<br>");
+    client.print("<br><br>");
 
-    client.print("<a href=./>");   // home
-    client.print("REFRESH");
-    client.print("</a>");
-    client.print("<br>");
+    // 링크
+    client.print("<a href=./>REFRESH</a><br>");
+    client.print("<a href=./on>ON</a><br>");
+    client.print("<a href=./off>OFF</a><br><br>");
 
-    client.print("<a href=./on>"); // on
-    client.print("ON");
-    client.print("</a>");
-    client.print("<br>");
-
-    client.print("<a href=./off>"); // off
-    client.print("OFF");
-    client.print("</a>");
-    client.print("<br>");
-    client.print("<br>");
-
-    client.print("</font>");
-    client.print("</body>");
-    client.print("</html>");
+    client.print("</font></body></html>");
   }
   else if (path.equals("/on")) {
-    client.print(htmlHeader);
-    client.print("<body><font size=5>");
-    client.print("LED is ON");
     digitalWrite(LED_PIN, HIGH);
+    client.print(htmlHeader);
+    client.print("<body bgcolor=");
+    client.print(bgColor);
+    client.print("><font size=5 color=");
+    client.print(fontColor);
+    client.print(">");
+    client.print("CED 002, Group 06<br>");
+    client.print("LED is ON<br>");
+    client.print(roomMsg);
+    client.print("<br>LDR value: ");
+    client.print(sensed_light);
+    client.print("<br><br>");
+    client.print("<a href=./>REFRESH</a><br>");
+    client.print("<a href=./off>OFF</a><br>");
     client.print("</font></body></html>");
   }
   else if (path.equals("/off")) {
-    client.print(htmlHeader);
-    client.print("<body><font size=5>");
-    client.print("LED is OFF");
     digitalWrite(LED_PIN, LOW);
+    client.print(htmlHeader);
+    client.print("<body bgcolor=");
+    client.print(bgColor);
+    client.print("><font size=5 color=");
+    client.print(fontColor);
+    client.print(">");
+    client.print("CED 002, Group 06<br>");
+    client.print("LED is OFF<br>");
+    client.print(roomMsg);
+    client.print("<br>LDR value: ");
+    client.print(sensed_light);
+    client.print("<br><br>");
+    client.print("<a href=./>REFRESH</a><br>");
+    client.print("<a href=./on>ON</a><br>");
     client.print("</font></body></html>");
   }
   else {
