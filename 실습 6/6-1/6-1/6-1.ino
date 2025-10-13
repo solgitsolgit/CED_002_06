@@ -80,7 +80,9 @@ void serverTest()
       String htmlBody = "Hello from Group 6";
       htmlBody += "<br>";
       htmlBody += "ShinYee Kang";
+      htmlBody += "<br>";
       htmlBody += "TaeHyun Lim";
+      htmlBody += "<br>";
       htmlBody += "JungHwan Kim";
       client.print(htmlBody);
     }
