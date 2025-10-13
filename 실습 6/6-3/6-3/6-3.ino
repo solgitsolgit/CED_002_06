@@ -3,8 +3,10 @@
 #include <CytronWiFiServer.h>
 #include <SoftwareSerial.h>
 
-const char *ssid = "No.3";
-const char *pass = "testtest";
+// 테더링 설정
+const char *ssid = "edunorm";
+const char *pass = "edu12345";
+//IPAddress ip(192, 168, 1, 242);
 ESP8266Server server(80);
 
 const char htmlHeader[] = "HTTP/1.1 200 OK\r\n"
@@ -29,7 +31,7 @@ void setup() {
   Serial.println(wifi.firmwareVersion());
   Serial.print(F("Mode: "));Serial.println(wifi.getMode());// 1- station mode, 2- softap mode, 3- both
   // Uncomment these 2 lines if you are using static IP Address
-  Serial.println(F("Setup wifi config"));
+  // Serial.println(F("Setup wifi config"));
   // wifi.config(ip);
   Serial.println(F("Start wifi connection"));
   if(!wifi.connectAP(ssid, pass))
@@ -77,14 +79,67 @@ void serverTest()
       IPAddress ip = wifi.localIP();
       String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
       client.print(htmlHeader);
-      String htmlBody = "Hello from Group 6";
+      String htmlBody = "Hello from MWFL";
       htmlBody += "<br>";
-      htmlBody += "ShinYee Kang";
-      htmlBody += "<br>";
-      htmlBody += "TaeHyun Lim";
-      htmlBody += "<br>";
-      htmlBody += "JungHwan Kim";
+      htmlBody += "06_KSY_LTH_KJH";
+      htmlBody += "</html>\r\n\r\n";
       client.print(htmlBody);
+    }
+
+    else if (req.equals("/team_info")) 
+    {
+      client.print(htmlHeader);
+      client.print("<head>");
+      client.print("<title>");
+      client.print("HTML example page"); // 페이지 제목
+      client.print("</title>");
+      client.print("</head>");
+  
+      client.print("<body bgcolor=#A47864>"); // Body color = Mocha Mousse
+      client.print("<font size=36 color=FF69B4>"); // Font color = Hot Pink
+
+      client.print("Team MWFL");
+      client.print("<br>"); 
+      client.print("06_KSY_LTH_KJH"); // 조원 이름
+      client.print("<br>");
+
+      // move to test
+      client.print("<br>");
+      client.print("<a href=./test>");
+      client.print("move to test");
+      client.print("</a>");
+      client.print("<br>");
+  
+      client.print("</font>");
+      client.print("</body>"); 
+      client.print("</html>");
+    }
+
+    else if (req.equals("/test")) 
+    {
+      client.print(htmlHeader);
+      client.print("<head>");
+      client.print("<title>");
+      client.print("Test Page"); // 페이지 제목
+      client.print("</title>");
+      client.print("</head>");
+  
+      client.print("<body bgcolor=#000000>"); // Body color = Black 
+      client.print("<font size=36 color=808080>"); // Font color = Grey
+
+      client.print("This is Test page");
+      client.print("<br>");
+      
+  
+      client.print("<br>");
+      client.print("<a href=./team_info>");
+      client.print("move to Team info");
+      client.print("</a>");
+      client.print("<br>");
+  
+      client.print("</font>");
+      client.print("</body>"); 
+      client.print("</html>");
     }
     
     else if(req.equals("/analog"))
@@ -162,6 +217,6 @@ void clientTest()
   client.stop();
 }
 
-// CED 002, group 06, 2020-14247 강신의
-// CED 002, group 06, 2023-14669 임태현
-// CED 002, group 06, 2025-17066 김정환
+// CED 002, group 06, 2020-14247, 강신의
+// CED 002, group 06, 2023-14669, 임태현
+// CED 002, group 06, 2025-17066, 김정환
