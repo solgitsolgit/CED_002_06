@@ -4,8 +4,8 @@
 #include <CytronWiFiServer.h>
 #include <SoftwareSerial.h>
 
-const char *ssid = "YourTetheringSSID";
-const char *pass = "YourTetheringPASS";
+const char *ssid = "No.3";
+const char *pass = "testtest";
 ESP8266Server server(80);
 
 // ----- HTML 헤더 -----
