@@ -1,6 +1,6 @@
 // ==== Experiment 4: LDR -> LED (A0, D2) ====
 const int LED_PIN = 5;
-const int LED_ON_THRESHOLD = 55; // 주변 밝기에 맞게 조정
+const int LED_ON_THRESHOLD = 50; // 주변 밝기에 맞게 조정
 
 void setup() {
   Serial.begin(9600); // Begin serial communication
