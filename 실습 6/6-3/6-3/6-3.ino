@@ -130,7 +130,7 @@ void serverTest()
       client.print("This is Test page");
       client.print("<br>");
       
-  
+  // move to team_info
       client.print("<br>");
       client.print("<a href=./team_info>");
       client.print("move to Team info");
