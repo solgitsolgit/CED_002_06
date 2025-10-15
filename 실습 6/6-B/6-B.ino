@@ -1,5 +1,3 @@
-// ==== Lab6 Exp.5: HTTP server + LDR + LED ====
-// Cytron ESPWiFi Shield 기반
 #include <CytronWiFiShield.h>
 #include <CytronWiFiClient.h>
 #include <CytronWiFiServer.h>
@@ -16,11 +14,10 @@ const char htmlHeader[] =
   "Connection: close\r\n\r\n"
   "<!DOCTYPE HTML>\r\n"
   "<html>\r\n";
-
 // ----- 핀/임계값 -----
-const int LED_PIN = 5;
+const int REDPIN = 5;
+const int GREENPIN = 6;
 const int LED_ON_THRESHOLD = 52;   // 주변 밝기에 맞춰 조정
-
 // ----- path 파싱 -----
 static String parsePathFromFirstLine(const String& firstLine) {
   int s = firstLine.indexOf(' ');
@@ -50,8 +47,11 @@ void setup() {
   wifi.updateStatus();
   Serial.println(wifi.status());
 
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+  pinMode(REDPIN, OUTPUT);
+  digitalWrite(REDPIN, LOW);
+  pinMode(GREENPIN, OUTPUT);
+  digitalWrite(GREENPIN, LOW);
+
 
   server.begin();
 }
@@ -103,14 +103,16 @@ void serverTest() {
     client.print("<br><br>");
 
     // 링크
-    client.print("<a href=./>REFRESH</a><br>");
-    client.print("<a href=./on>ON</a><br>");
-    client.print("<a href=./off>OFF</a><br><br>");
+    client.print("<a href=./>REFRESH</a><br><br>");
+    client.print("<a href=./red_on>RED_ON</a><br>");
+    client.print("<a href=./red_off>RED_OFF</a><br><br>");
+    client.print("<a href=./green_on>GREEN_ON</a><br>");
+    client.print("<a href=./green_off>GREEN_OFF</a><br><br>");
 
     client.print("</font></body></html>");
   }
-  else if (path.equals("/on")) {
-    digitalWrite(LED_PIN, HIGH);
+  else if (path.equals("/red_on")) {
+    digitalWrite(REDPIN, HIGH);
     client.print(htmlHeader);
     client.print("<body bgcolor=");
     client.print(bgColor);
@@ -118,7 +120,7 @@ void serverTest() {
     client.print(fontColor);
     client.print(">");
     client.print("CED 002, Group 06<br>");
-    client.print("LED is ON<br>");
+    client.print("RED LED is ON<br>");
     client.print(roomMsg);
     client.print("<br>LDR value: ");
     client.print(sensed_light);
@@ -127,8 +129,8 @@ void serverTest() {
     client.print("<a href=./off>OFF</a><br>");
     client.print("</font></body></html>");
   }
-  else if (path.equals("/off")) {
-    digitalWrite(LED_PIN, LOW);
+  else if (path.equals("/red_off")) {
+    digitalWrite(REDPIN, LOW);
     client.print(htmlHeader);
     client.print("<body bgcolor=");
     client.print(bgColor);
@@ -136,7 +138,43 @@ void serverTest() {
     client.print(fontColor);
     client.print(">");
     client.print("CED 002, Group 06<br>");
-    client.print("LED is OFF<br>");
+    client.print("RED LED is OFF<br>");
+    client.print(roomMsg);
+    client.print("<br>LDR value: ");
+    client.print(sensed_light);
+    client.print("<br><br>");
+    client.print("<a href=./>REFRESH</a><br>");
+    client.print("<a href=./on>ON</a><br>");
+    client.print("</font></body></html>");
+  }
+  else if (path.equals("/green_on")) {
+    digitalWrite(GREENPIN, HIGH);
+    client.print(htmlHeader);
+    client.print("<body bgcolor=");
+    client.print(bgColor);
+    client.print("><font size=5 color=");
+    client.print(fontColor);
+    client.print(">");
+    client.print("CED 002, Group 06<br>");
+    client.print("GREEN LED is ON<br>");
+    client.print(roomMsg);
+    client.print("<br>LDR value: ");
+    client.print(sensed_light);
+    client.print("<br><br>");
+    client.print("<a href=./>REFRESH</a><br>");
+    client.print("<a href=./off>OFF</a><br>");
+    client.print("</font></body></html>");
+  }
+  else if (path.equals("/green_off")) {
+    digitalWrite(GREENPIN, LOW);
+    client.print(htmlHeader);
+    client.print("<body bgcolor=");
+    client.print(bgColor);
+    client.print("><font size=5 color=");
+    client.print(fontColor);
+    client.print(">");
+    client.print("CED 002, Group 06<br>");
+    client.print("GREEN LED is OFF<br>");
     client.print(roomMsg);
     client.print("<br>LDR value: ");
     client.print(sensed_light);
@@ -151,8 +189,8 @@ void serverTest() {
 
   // 디버그
   Serial.print(F("LDR=")); Serial.print(sensed_light);
-  Serial.print(F("  LED=")); Serial.println(digitalRead(LED_PIN) ? F("ON") : F("OFF"));
-
+  Serial.print(F("  LED=")); Serial.println(digitalRead(REDPIN) ? F("ON") : F("OFF"));
+  Serial.print(F("  LED=")); Serial.println(digitalRead(GREENPIN) ? F("ON") : F("OFF"));
   client.stop();
 }
 // CED 002, group 06, 2020-14247 강신의
