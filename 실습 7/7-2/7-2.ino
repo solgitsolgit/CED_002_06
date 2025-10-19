@@ -1,3 +1,4 @@
+// 라이브러리와 변수 설정
 #include <SoftwareSerial.h>
 static int counter = 0;
 SoftwareSerial bt_serial(2,3);
@@ -6,6 +7,7 @@ void setup() {
   bt_serial.begin(9600); // Serial baud rate 9600
 }
 
+// PuTTY 화면 출력 설정
 void loop() {
   bt_serial.print("Tick #");
   bt_serial.print(counter++, DEC); // print counter and increment 1

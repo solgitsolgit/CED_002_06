@@ -11,10 +11,10 @@ void loop() {
   if (bt_serial.available() > 0) {
     byte data = (byte) bt_serial.read();
     if (data == 'h') {
-      digitalWrite(13, HIGH);
+      digitalWrite(13, HIGH); // h 입력시 LED 켜기
     }
     if (data == 'l') {
-      digitalWrite(13, LOW);
+      digitalWrite(13, LOW); // l 입력시 LED 끄기
     }
   }
 }
