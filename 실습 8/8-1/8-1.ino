@@ -8,6 +8,7 @@ int speed = 200; // 모터 속도 설정 (0 ~ 255)
 #define IN4 2 // 모터 4, S2
 
 void setup() {
+  Serial.begin(9600);
   // pin 모드 출력으로 설정
   pinMode(ENA, OUTPUT); 
   pinMode(ENB, OUTPUT);

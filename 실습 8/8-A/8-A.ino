@@ -13,6 +13,7 @@ int speed = 200; // 모터 속도 설정 (0 ~ 255)
 const int Threshold = 500; // 임계값 설정
 
 void setup() {
+  Serial.begin(9600);
   // pin 모드 출력으로 설정
   pinMode(ENA, OUTPUT); 
   pinMode(ENB, OUTPUT);
@@ -42,7 +43,8 @@ void move() {
 
 void loop() {
   int sensorValue = analogRead(LineSensor); // 센서 값 읽기
-  Serial.print(sensorValue); // 시리얼 모니터에 출력
+  Serial.print("sensroValue:");
+  Serial.println(sensorValue); // 시리얼 모니터에 출력
 
   if (sensorValue > Threshold) {
     move();
@@ -54,7 +56,7 @@ void loop() {
     Serial.println("white -> stop"); // 흰색 바닥 위 모터 멈춤
   } 
 
-  delay(100);
+  delay(1000);
 }
 
 // CED 002, group 06, 2020-14247, ShinYee Kang
