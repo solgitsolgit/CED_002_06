@@ -21,24 +21,28 @@ void setup() {
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-
-  // motor 방향 설정
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW); 
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
 }
 
 // motor를 멈추는 함수
 void stop() {
   analogWrite(ENA, 0);
   analogWrite(ENB, 0);
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW); 
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
 
 // motor를 구동시키는 함수
 void move() {
   analogWrite(ENA, speed); 
   analogWrite(ENB, speed);
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW); 
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
 }
 
 void loop() {
