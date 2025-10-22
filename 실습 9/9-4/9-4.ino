@@ -1,5 +1,5 @@
 #define TRIG_PIN 12
-#define ECHO_PIN 11
+#define ECHO_PIN 13
 
 int speed = 200;
 
