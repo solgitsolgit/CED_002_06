@@ -69,7 +69,11 @@ void loop() {
 
   else if(direction == Stop)
   {
+    digitalWrite(EN1, LOW);
+    digitalWrite(EN2, LOW);
     analogWrite(ENA, 0);
+    digitalWrite(EN3, LOW);
+    digitalWrite(EN4, LOW);
     analogWrite(ENB, 0);
   }
 }

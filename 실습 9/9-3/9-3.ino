@@ -115,7 +115,11 @@ void car_update()
   if (g_carDirection == CAR_DIR_ST) // 정지
   {
     Serial.println("Stop");
+    digitalWrite(EN1, LOW);
+    digitalWrite(EN2, LOW);
     analogWrite(ENA, 0);
+    digitalWrite(EN3, LOW);
+    digitalWrite(EN4, LOW);
     analogWrite(ENB, 0);
   }
   
