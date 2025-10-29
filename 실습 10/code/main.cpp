@@ -22,7 +22,7 @@ void print_cwd_and_files() {
 
 int main() {
     while (true) {
-        system("cls");                // 콘솔 깨끗하게 (원치 않으면 제거)
+        system("cls");
         print_cwd_and_files();
         cout << "\n===== Lab10 실험 선택 =====\n";
         cout << "  1) 실험 1 (main1)\n";
@@ -76,3 +76,6 @@ int main() {
 
     return 0;
 }
+// CED 002, group 06, 2020-14247 강신의
+// CED 002, group 06, 2023-14669 임태현
+// CED 002, group 06, 2025-17066 김정환
