@@ -1,0 +1,33 @@
+[CarHW]
+
+# 현장 설정
+1. Swing Turn or Pivot Turn
+2. Speed (0~255) : 빠르면 선 넘어감
+3. 라인트레이서 간 거리
+4. 라인트레이서/광센서 Threshold
+5. 초음파센서 duration
+
+# 코드 제출
+1. .ino로 제출 -> 헤더파일 가능?
+2. 구간별 다른 mode 설정 문의
+
+# Lab ino Files
+라인트레이서 : 9-3
+초음파 : 9-4
+
+# 함수 이름 (Void)
+InitHW() : pin 설정
+SetSpeed() : 속도 설정
+MoveFront() : 전진
+MoveBack() : 후진
+TurnLeft() : 좌회전
+TurnRight() : 우회전
+StopCar() : 정지
+IsLT() : 라인트레이서 bool
+// ReadDistance() : 초음파센서 거리
+GetLeftDistance() : 초음파센서 왼쪽 거리
+GetRightDistance() : 초음파센서 오른쪽 거리
+// ReadPhotoSensor() : 광센서 값
+IsDark() : 어둠 bool
+GetBT() : 블루투스 읽기
+DisplayLCD() : lcd 출력

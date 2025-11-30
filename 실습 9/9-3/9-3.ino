@@ -27,7 +27,7 @@ bool lt_isLeft()
 {
   int ret = analogRead(LT_MODULE_L);
   Serial.print("left: ");
-  Serial.println(ret);
+  Serial.print(ret);
   return (ret > 200) ? (true) : (false);
 }
 
@@ -42,8 +42,8 @@ bool lt_isRight()
 bool lt_isForward()
 {
   int ret = analogRead(LT_MODULE_F);
-  Serial.print("forward: ");
-  Serial.println(ret);
+  Serial.print(" forward: ");
+  Serial.print(ret);
   return (ret > 200) ? (true) : (false);
 }
 
@@ -61,6 +61,7 @@ void lt_mode_update()
   {
     g_carDirection = CAR_DIR_ST;
   }
+
   else if (ll)
   {
     g_carDirection = CAR_DIR_LF;
@@ -78,10 +79,10 @@ void lt_mode_update()
 void car_update()
 {
   Serial.print("Car update: ");
-  Serial.println(g_carDirection);
+  Serial.print(g_carDirection);
   if (g_carDirection == CAR_DIR_FW) // 전진
   {
-    Serial.println("Forward");
+    Serial.print("Forward   ");
     digitalWrite(EN1, HIGH);
     digitalWrite(EN2, LOW);
     analogWrite(ENA, speed);
@@ -92,7 +93,7 @@ void car_update()
 
   if (g_carDirection == CAR_DIR_LF) // 좌회전
   {
-    Serial.println("Left");
+    Serial.print("Left   ");
     digitalWrite(EN1, LOW);
     digitalWrite(EN2, HIGH);
     analogWrite(ENA, speed);
@@ -103,7 +104,7 @@ void car_update()
 
   if (g_carDirection == CAR_DIR_RF) // 우회전
   {
-    Serial.println("Right");
+    Serial.print("Right   ");
     digitalWrite(EN1, HIGH);
     digitalWrite(EN2, LOW);
     analogWrite(ENA, speed);
@@ -114,7 +115,7 @@ void car_update()
 
   if (g_carDirection == CAR_DIR_ST) // 정지
   {
-    Serial.println("Stop");
+    Serial.print("Stop   ");
     digitalWrite(EN1, LOW);
     digitalWrite(EN2, LOW);
     analogWrite(ENA, 0);
@@ -138,6 +139,7 @@ void setup() {
 }
 
 void loop(){
-  car_update();
   lt_mode_update();
-}
+  car_update();
+  delay(100);
+  }

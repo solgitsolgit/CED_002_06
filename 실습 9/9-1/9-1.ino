@@ -5,7 +5,7 @@
 #define Stop 5 // 정지
 
 int direction = 0; // 차량 운행상태 전역변수 선언
-int speed = 200;
+int speed = 150;
 
 #define ENA 6
 #define EN1 7
@@ -75,5 +75,10 @@ void loop() {
     digitalWrite(EN3, LOW);
     digitalWrite(EN4, LOW);
     analogWrite(ENB, 0);
+  }
+
+  if(direction == 6) 
+  {
+    direction = 0 ;
   }
 }

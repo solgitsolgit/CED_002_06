@@ -2,6 +2,7 @@
 #define ECHO_PIN 13
 
 int speed = 200;
+long last_cm = 10;
 
 #define ENA 6
 #define EN1 7
@@ -49,18 +50,27 @@ void goBackward() {
 
 void loop() {
   long duration, cm;
-  digitalWrite(TRIGGER_PIN, HIGH);
+  digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
-  digitalWrite(TRIGGER_PIN, LOW);
+  digitalWrite(TRIG_PIN, LOW);
 
-  duration = pulseln(ECHO_PIN, HIGH);
+  duration = pulseIn(ECHO_PIN, HIGH);
 
   cm = microsecondsToCentimeters(duration);
 
-  if (cm <= 20) {          // 바로 20 사용
+  if (cm == 0 or cm > 100) {
+    cm = last_cm;
+  } else {
+    last_cm = cm;
+  }
+
+  if (cm <= 10) {          // 바로 20 사용
     goBackward();
     delay(400);            // 잠깐 후진
-  } else {
+  } 
+  else {
     goForward();
-  }
+    }
+
+  Serial.println(cm);
 }
