@@ -7,14 +7,8 @@
 // board.cells[0] = BoardState::CELL_MINE; // 1번 칸에 내 돌
 // board.cells[1] = BoardState::CELL_OTHER; // 2번 칸에 상대 돌
 // board.cells[2] = BoardState::CELL_EMPTY; // 3번 칸 비어있음
-struct BoardState {
-    enum CellState {
-        CELL_EMPTY,
-        CELL_MINE,
-        CELL_OTHER
-    };
-    CellState cells[9];
-};
+
+#include "commons.h"
 
 // board: 전체 9칸 상태 (CELL_EMPTY, CELL_MINE, CELL_OTHER)
 // myMoves: 블루투스로 받은 "내가 이미 둔 위치들" (1~9 값들)

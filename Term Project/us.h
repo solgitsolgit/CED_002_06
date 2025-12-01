@@ -1,5 +1,7 @@
 #pragma once
 // ===== Ultrasonic Controller (강신의) =====
+#include <Arduino.h>
+#include "constants.h"
 
 // 초음파 센서 핀 초기화 (좌/우 2개)
 void usInit();
