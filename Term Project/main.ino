@@ -4,6 +4,7 @@
 #include "car_hw.h"      // InitHW()
 #include "motor.h"       // StopCar() 등
 #include "lfs.h"         // lfsInit(), lfsUpdate()
+#include "ttt_solver.h"
 
 // 블루투스는 car_hw.ino에서 SoftwareSerial btSerial(...) 로 이미 선언/초기화됨
 // 여기서 extern으로 가져다 씀
@@ -35,9 +36,28 @@ bool gTttDone   = false;      // MODE_TTT에서 Dummy 동작이 끝났는지
 //  - tttFindWinningMove() 호출
 //  - LCD에 정답 출력
 // 이런 구조가 들어갈 자리.
-void runTicTacToeDummy() {
-  Serial.println("[TTT] Dummy: 틱택토 스캔 & 정답 출력 자리입니다.");
-  Serial.println("[TTT] (나중에 초음파 + 보드 탐색 + 정답 알고리즘 들어갈 예정)");
+void runTicTacToe() {
+  BoardState board;
+  for (int i = 0; i < 9; i++) {
+    board.cells[i] = BoardState::CELL_EMPTY;
+  }
+
+  int myMoves[5];
+  int myMoveCount = 0;
+
+  // TODO: 여기서 초음파로 board.cells 채우기
+  // TODO: 여기서 btSerial로 내 말 위치들을 받아서 myMoves / myMoveCount 채우기
+  // 예시:
+  // myMoves[0] = 3;
+  // myMoves[1] = 7;
+  // myMoveCount = 2;
+
+  int ans = tttFindWinningMove(board, myMoves, myMoveCount);
+
+  // 정답 출력 (원하는 쪽으로)
+  btSerial.println(ans);   // 블루투스로 보내기
+  Serial.println(ans);     // 디버깅용 시리얼 출력
+}
 
   // 나중에 여기서:
   // BoardState board;
@@ -113,7 +133,7 @@ void loop() {
     case MODE_TTT:
       // 지금은 Dummy: 한 번만 실행하고 끝
       if (!gTttDone) {
-        runTicTacToeDummy();
+        runTicTacToe();
         gTttDone = true;
       }
       // 이후에는 제자리에서 아무것도 안 함 (필요하면 정지 유지)

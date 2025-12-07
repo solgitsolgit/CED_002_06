@@ -1,133 +1,177 @@
-#include <Arduino.h>
-#include "CarHW.h"
-#include "line_sensor.h"
-#include "motor.h"
+// ================= 1. 핀 번호 정의 =================
+#define ENA 6  // 왼쪽 모터 속도 (PWM)
+#define EN1 7  // 왼쪽 방향 1
+#define EN2 3  // 왼쪽 방향 2
 
-// 방향 상태
-#define CAR_DIR_ST  1
-#define CAR_DIR_FW  2
-#define CAR_DIR_LF  3
-#define CAR_DIR_RF  4
-#define CAR_DIR_UT  5   // 유턴(180도)
+#define ENB 5  // 오른쪽 모터 속도 (PWM)
+#define EN3 4  // 오른쪽 방향 1
+#define EN4 2  // 오른쪽 방향 2
 
-// 튜닝 값(필요시 조절)
-static const int LOOP_DELAY_MS   = 100;  // 원본 코드처럼 100ms
-static const int TURN_MS         = 170;  // 좌/우 회전 시간(너의 TurnLeft/Right가 "회전 시작"만 하면 필요)
-static const int REACQUIRE_MS    = 120;  // 회전 후 라인 다시 잡기용 전진
-static const int BACK_MS_UTURN   = 120;  // 유턴 전 살짝 후진
-static const int LOST_CONFIRM    = 3;    // 라인 미검출 연속 N번이면 진짜 막다른 길로 판단
-static const int UTURN_COOLDOWN  = 400;  // 유턴 연타 방지(ms)
+#define LT_MODULE_L A2 // 왼쪽 센서
+#define LT_MODULE_F A1 // 중앙 센서
+#define LT_MODULE_R A0 // 오른쪽 센서
 
-static int      g_carDirection = CAR_DIR_ST;
-static int      g_lostCount    = 0;
-static uint32_t g_lastUTurnMs  = 0;
+// ================= 2. 상태 상수 정의 =================
+#define CAR_DIR_ST 1 // 정지
+#define CAR_DIR_FW 2 // 전진
+#define CAR_DIR_LF 3 // 좌회전
+#define CAR_DIR_RF 4 // 우회전
+#define CAR_DIR_UT 5 // 유턴
 
-static inline bool lsLeft(uint8_t v)   { return (v & LINE_LEFT)   != 0; }
-static inline bool lsFront(uint8_t v)  { return (v & LINE_CENTER) != 0; }
-static inline bool lsRight(uint8_t v)  { return (v & LINE_RIGHT)  != 0; }
+// ================= 3. 전역 변수 설정 =================
+// 속도: 배터리 상태에 따라 150 ~ 255 사이로 조절하세요.
+int speed = 20; 
+bool was_left = false;
+// 현재 자동차의 동작 상태
+int g_carDirection = CAR_DIR_ST;
 
-static bool isJunction(uint8_t v) {
-  // 1) 3개 센서 모두 검정(교차로) 판단 함수 우선 사용
-  if (lineIsIntersection(v)) return true;
+// [핵심] 직전 상태 기억 변수 (-1:왼쪽, 0:직진, 1:오른쪽)
+int lastSensorState = 0; 
 
-  // 2) 또는 2개 이상 동시에 감지되면 교차로/분기점으로 간주
-  int cnt = 0;
-  if (lsLeft(v))  cnt++;
-  if (lsFront(v)) cnt++;
-  if (lsRight(v)) cnt++;
-  return (cnt >= 2);
+// [핵심] 선을 놓친 시점을 기록할 타이머 변수
+unsigned long lineLostTime = 0; 
+
+// 센서 감도 기준값 (환경에 따라 100~800 사이 조정)
+#define THRESHOLD 200 
+int stop_cnt = 0;
+
+// ================= 4. 초기화 함수 =================
+void init_line_tracer_modules(){
+  pinMode(LT_MODULE_L, INPUT);
+  pinMode(LT_MODULE_F, INPUT);
+  pinMode(LT_MODULE_R, INPUT);
 }
 
-static void lfs_mode_update() {
-  // IsLT()로 라인 존재 여부를 먼저 판단(없으면 막다른 길 후보)
-  if (!IsLT()) {
-    g_lostCount++;
-    if (g_lostCount >= LOST_CONFIRM) g_carDirection = CAR_DIR_UT;
-    else g_carDirection = CAR_DIR_FW; // 잠깐 끊김은 전진으로 버텨보기(원하면 ST로 바꿔도 됨)
-    return;
-  }
-  g_lostCount = 0;
+void setup() {
+  Serial.begin(9600);
+  init_line_tracer_modules();
 
-  uint8_t v = lineRead();
-  bool L = lsLeft(v);
-  bool F = lsFront(v);
-  bool R = lsRight(v);
-
-  // 교차로에서는 LFS 규칙: 좌 -> 전 -> 우 -> 유턴
-  if (isJunction(v)) {
-    if (L)       g_carDirection = CAR_DIR_LF;
-    else if (F)  g_carDirection = CAR_DIR_FW;
-    else if (R)  g_carDirection = CAR_DIR_RF;
-    else         g_carDirection = CAR_DIR_UT;
-    return;
-  }
-
-  // 교차로가 아니면 간단 라인트레이싱(중앙 우선)
-  if (F)         g_carDirection = CAR_DIR_FW;
-  else if (L)    g_carDirection = CAR_DIR_LF;
-  else if (R)    g_carDirection = CAR_DIR_RF;
-  else           g_carDirection = CAR_DIR_UT;
+  pinMode(ENA, OUTPUT); pinMode(EN1, OUTPUT); pinMode(EN2, OUTPUT);
+  pinMode(ENB, OUTPUT); pinMode(EN3, OUTPUT); pinMode(EN4, OUTPUT);
+  
+  // LCD 등 다른 센서 초기화가 필요하면 여기에 추가
 }
 
-static void car_update() {
-  if (g_carDirection == CAR_DIR_FW) {          // 전진
-    MoveFront();
-  }
-  else if (g_carDirection == CAR_DIR_LF) {     // 좌회전
-    TurnLeft();
-    delay(TURN_MS);
-    MoveFront();
-    delay(REACQUIRE_MS);
-  }
-  else if (g_carDirection == CAR_DIR_RF) {     // 우회전
-    TurnRight();
-    delay(TURN_MS);
-    MoveFront();
-    delay(REACQUIRE_MS);
-  }
-  else if (g_carDirection == CAR_DIR_UT) {     // 유턴(180도)
-    uint32_t now = millis();
-    if (now - g_lastUTurnMs < (uint32_t)UTURN_COOLDOWN) {
-      StopCar();
-      return;
+
+// ================= 5. 센서 판단 로직 =================
+// 센서 값을 읽어서 True(검은선)/False(흰색) 반환
+bool lt_isLeft()    { return (analogRead(LT_MODULE_L) > THRESHOLD); }
+bool lt_isForward() { return (analogRead(LT_MODULE_F) > THRESHOLD); }
+bool lt_isRight()   { return (analogRead(LT_MODULE_R) > THRESHOLD); }
+
+void lt_mode_update()
+{
+  bool ll = lt_isLeft();
+  bool ff = lt_isForward();
+  bool rr = lt_isRight();
+
+  // Case 1: 선이 감지되는 상황 (정상 주행)
+  // 선이 보이면 타이머를 리셋하고, 현재 방향을 기억합니다.
+  if (ll || ff || rr) {
+    lineLostTime = 0; // 선 찾음 -> 타이머 초기화
+
+    // 우선순위: 왼쪽(LFS) > 직진 > 오른쪽
+    if (ll) {
+      g_carDirection = CAR_DIR_LF;
+      lastSensorState = -1; // "방금 왼쪽이었음"
     }
-    g_lastUTurnMs = now;
-
-    StopCar();
-    delay(50);
-
-    MoveBack();                // 유턴 전 살짝 후진(선에서 벗어난 상태 정리)
-    delay(BACK_MS_UTURN);
-    StopCar();
-    delay(50);
-
-    motorTurnAround180();      // ★ 요구사항: 180도 회전 유턴
-
-    StopCar();
-    delay(50);
-
-    MoveFront();               // 유턴 후 라인 재획득
-    delay(REACQUIRE_MS);
+    else if (ff) {
+      g_carDirection = CAR_DIR_FW;
+      lastSensorState = 0;  // "방금 직진이었음"
+    }
+    else if (rr) {
+      g_carDirection = CAR_DIR_RF;
+      lastSensorState = 1;  // "방금 오른쪽이었음"
+    }
   }
-  else {                                       // 정지
-    StopCar();
+  
+  // Case 2: 선이 하나도 안 보이는 상황 (0, 0, 0)
+  // "기억"을 되살려서 판단합니다.
+  else {
+    // (A) 회전 중에 놓친 경우 -> 관성 유지 (계속 돌아서 선 찾기)
+    if (lastSensorState == -1) {
+        g_carDirection = CAR_DIR_LF; 
+    }
+    else if (lastSensorState == 1) {
+        g_carDirection = CAR_DIR_RF;
+    }
+    
+    // (B) 직진 중에 놓친 경우 -> 틈(Gap)인지 막다른 길(Dead End)인지 시간으로 판단
+    else if (lastSensorState == 0) {
+      
+      // 처음 놓친 순간이라면 시간 기록 시작
+      if (lineLostTime == 0) {
+        lineLostTime = millis(); 
+      }
+
+      // 경과 시간 계산
+      unsigned long elapsedTime = millis() - lineLostTime;
+
+      // 0.2초(200ms) 동안은 "잠깐 끊긴 거겠지" 하고 직진 유지
+      if (elapsedTime < 10) { 
+        g_carDirection = CAR_DIR_FW; 
+      }
+      // 0.2초가 지났는데도 선이 안 나타나면 "아, 진짜 막다른 길이구나" -> 유턴
+      else {
+        g_carDirection = CAR_DIR_UT; 
+      }
+    }
   }
 }
 
-// LFS 주행 시작 전에 호출 (필요한 상태 변수 초기화)
-void lfsInit(){
-  lineSensorInit();
-  SetSpeed(currentSpeed);   // CarHW.h의 currentSpeed 사용
-  StopCar();
 
-  g_carDirection = CAR_DIR_ST;
-  g_lostCount = 0;
-  g_lastUTurnMs = 0;
+// ================= 6. 모터 구동 로직 =================
+void car_update()
+{
+  if (g_carDirection == CAR_DIR_FW) // [전진]
+  {
+    digitalWrite(EN1, HIGH); digitalWrite(EN2, LOW); // 왼쪽 전진
+    digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW); // 오른쪽 전진
+    analogWrite(ENA, speed); analogWrite(ENB, speed);
+  }
+  else if (g_carDirection == CAR_DIR_LF) // [좌회전] (제자리 회전)
+  {
+    digitalWrite(EN1, LOW);  digitalWrite(EN2, HIGH); // 왼쪽 후진
+    digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW);  // 오른쪽 전진
+    analogWrite(ENA, speed); analogWrite(ENB, speed);
+    delay(90);
+  }
+  else if (g_carDirection == CAR_DIR_RF) // [우회전] (제자리 회전)
+  {
+    digitalWrite(EN1, HIGH); digitalWrite(EN2, LOW);  // 왼쪽 전진
+    digitalWrite(EN3, LOW);  digitalWrite(EN4, HIGH); // 오른쪽 후진
+    analogWrite(ENA, speed); analogWrite(ENB, speed);
+  }
+  else if (g_carDirection == CAR_DIR_UT) // [유턴] (강한 제자리 회전)
+  {
+    // 좌회전과 동일한 메커니즘으로 180도 회전 시도
+    digitalWrite(EN1, LOW);  digitalWrite(EN2, HIGH); 
+    digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW);  
+    analogWrite(ENA, speed); analogWrite(ENB, speed);
+  }
+  else // [정지] (CAR_DIR_ST)
+  {
+    analogWrite(ENA, 0); analogWrite(ENB, 0);
+    // 모터 풀림 방지 (Brake)
+    digitalWrite(EN1, LOW); digitalWrite(EN2, LOW);
+    digitalWrite(EN3, LOW); digitalWrite(EN4, LOW);
+  }
 }
 
-// main loop에서 MODE_LFS일 때 반복적으로 호출
-void lfsUpdate(){
-  lfs_mode_update();
-  car_update();
-  delay(LOOP_DELAY_MS);     // 원본 코드 스타일 유지
+
+// ================= 7. 메인 루프 =================
+void loop(){
+  stop_cnt++;
+  if (stop_cnt <3){
+  lt_mode_update(); // 센서 판단 및 방향 결정
+  car_update();     // 모터 구동
+  
+  // 딜레이를 최소화하여 반응 속도 향상 (10ms 권장)
+  }
+  //delay(100);
+  else{
+    stop_cnt = 0;
+    g_carDirection = CAR_DIR_ST;
+    car_update();
+  } 
 }
