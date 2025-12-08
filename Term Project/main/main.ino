@@ -1,10 +1,12 @@
 #include <Arduino.h>
 
+#include "commons.h"
 #include "constants.h"
 #include "car_hw.h"      // InitHW()
 #include "motor.h"       // StopCar() 등
 #include "lfs.h"         // lfsInit(), lfsUpdate()
 #include "ttt_solver.h"
+#include "ttt_scan.h"
 
 // 블루투스는 car_hw.ino에서 SoftwareSerial btSerial(...) 로 이미 선언/초기화됨
 // 여기서 extern으로 가져다 씀
@@ -20,13 +22,17 @@ extern SoftwareSerial btSerial;
 
 enum Mode {
   MODE_LFS = 0,      // Left-First-Search 라인트레이싱 모드
-  MODE_TTT           // 틱택토 탐색 & 정답 출력 모드 (현재는 dummy)
+  MODE_STOP,
+  MODE_SCAN,
+  MODE_TTT,           // 틱택토 탐색 & 정답 출력 모드 (현재는 dummy)
 };
 
 Mode gMode      = MODE_LFS;   // 현재 모드
 Mode gPrevMode  = MODE_LFS;   // 이전 모드 (모드 전환 감지용)
 
 bool gTttDone   = false;      // MODE_TTT에서 Dummy 동작이 끝났는지
+BoardState board;
+bool isUturn;
 
 // ================== 틱택토 Dummy 함수들 ==================
 
@@ -39,13 +45,13 @@ bool gTttDone   = false;      // MODE_TTT에서 Dummy 동작이 끝났는지
 void runTicTacToe() {
   BoardState board;
   for (int i = 0; i < 9; i++) {
-    board.cells[i] = BoardState::CELL_EMPTY;
+    board.cell[i] = BoardState::CELL_EMPTY;
   }
 
   int myMoves[5];
   int myMoveCount = 0;
 
-  // TODO: 여기서 초음파로 board.cells 채우기
+  // TODO: 여기서 초음파로 board.cell 채우기
   // TODO: 여기서 btSerial로 내 말 위치들을 받아서 myMoves / myMoveCount 채우기
   // 예시:
   // myMoves[0] = 3;
@@ -57,14 +63,6 @@ void runTicTacToe() {
   // 정답 출력 (원하는 쪽으로)
   btSerial.println(ans);   // 블루투스로 보내기
   Serial.println(ans);     // 디버깅용 시리얼 출력
-}
-
-  // 나중에 여기서:
-  // BoardState board;
-  // tttScanInit(board);
-  // tttScanBoard(board);
-  // int ans = tttFindWinningMove(board, ...);
-  // lcdPrintAnswer(ans);
 }
 
 // ================== 블루투스 입력 처리 ==================
@@ -96,8 +94,11 @@ void handleBluetooth() {
 // ================== setup / loop ==================
 
 void setup() {
-  InitHW();          // 모터, 센서, BT, LCD 등 한 번에 초기화
-  lfsInit();         // LFS 알고리즘 내부 상태 초기화
+  InitHW();           // 모터, 센서, BT, LCD 등 한 번에 초기화
+  lfsInit();          // LFS 알고리즘 내부 상태 초기화
+  tttScanInit();      // ttt_scan 초기화
+
+  board.cell = {}; // initialize board state
 
   Serial.println("=== System Start ===");
   Serial.println("Mode: LFS (기본)");
@@ -130,14 +131,23 @@ void loop() {
       lfsUpdate();
       break;
 
+    case MODE_STOP:
+      StopCar();
+      break;
+    
+    case MODE_SCAN:
+    // Implement scan mode
+      isUturn = lfsUpdate();
+      tttScanBoard(&board, isUturn);
+      break;
+
     case MODE_TTT:
-      // 지금은 Dummy: 한 번만 실행하고 끝
+      StopCar();
       if (!gTttDone) {
         runTicTacToe();
         gTttDone = true;
       }
       // 이후에는 제자리에서 아무것도 안 함 (필요하면 정지 유지)
-      StopCar();
       break;
   }
 

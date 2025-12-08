@@ -1,12 +1,4 @@
 #pragma once
-// ===== Tic-Tac-Toe Solver (임태현) =====
-
-// Board 상태 표현 (아래는 예시, 원하는 대로 구조체 만들어주세요)
-// 사용 예시:
-// BoardState board;
-// board.cells[0] = BoardState::CELL_MINE; // 1번 칸에 내 돌
-// board.cells[1] = BoardState::CELL_OTHER; // 2번 칸에 상대 돌
-// board.cells[2] = BoardState::CELL_EMPTY; // 3번 칸 비어있음
 
 #include "commons.h"
 

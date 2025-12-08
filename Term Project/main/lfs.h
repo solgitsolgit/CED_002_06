@@ -1,4 +1,5 @@
 #pragma once
+#include "constants.h"
 
 // ===== LFS Algorithm (임태현) =====
 

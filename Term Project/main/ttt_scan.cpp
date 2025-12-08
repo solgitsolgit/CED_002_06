@@ -109,7 +109,7 @@ void tttScanInit(BoardState &board) {
     }
 }
 
-void tttScanBoard(BoardState &board) {
+void tttScanBoard(BoardState &board, bool isUturn) {
     // 0. 시작 상태 가정:
     //    - 세로 중앙 라인의 맨 위 교차점(또는 그 직전)에 있고,
     //    - 아래 방향을 보고 있음

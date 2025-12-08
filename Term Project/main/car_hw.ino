@@ -4,7 +4,7 @@
 #include <LiquidCrystal_I2C.h> // LCD
 #include <SoftwareSerial.h> // Bluetooth[]
 
-#include "CarHW.h"
+#include "car_hw.h"
 
 SoftwareSerial btSerial(BT_RX, BT_TX);
 

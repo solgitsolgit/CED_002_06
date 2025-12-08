@@ -1,3 +1,6 @@
+#include "lfs.h"
+
+/*
 // ================= 1. 핀 번호 정의 =================
 #define ENA 6  // 왼쪽 모터 속도 (PWM)
 #define EN1 7  // 왼쪽 방향 1
@@ -10,6 +13,8 @@
 #define LT_MODULE_L A2 // 왼쪽 센서
 #define LT_MODULE_F A1 // 중앙 센서
 #define LT_MODULE_R A0 // 오른쪽 센서
+
+*/
 
 // ================= 2. 상태 상수 정의 =================
 #define CAR_DIR_ST 1 // 정지
@@ -42,7 +47,7 @@ void init_line_tracer_modules(){
   pinMode(LT_MODULE_R, INPUT);
 }
 
-void setup() {
+void lfsInit() {
   Serial.begin(9600);
   init_line_tracer_modules();
 
@@ -160,7 +165,7 @@ void car_update()
 
 
 // ================= 7. 메인 루프 =================
-void loop(){
+void lfsUpdate(){
   stop_cnt++;
   if (stop_cnt <3){
   lt_mode_update(); // 센서 판단 및 방향 결정
