@@ -34,9 +34,9 @@ int tttFindWinningMove(const BoardState& board,
   uint16_t otherMask = 0;
 
   for (int i = 0; i < 9; i++) {
-    if (board.cells[i] == BoardState::CELL_MINE) {
+    if (board.cell[i] == BoardState::CELL_MINE) {
       myMask |= (uint16_t)(1u << i);
-    } else if (board.cells[i] == BoardState::CELL_OTHER) {
+    } else if (board.cell[i] == BoardState::CELL_OTHER) {
       otherMask |= (uint16_t)(1u << i);
     }
   }
