@@ -30,3 +30,5 @@ const int PhotoThreshold = 300;
 // Bluetooth
 const int BT_RX = 8;
 const int BT_TX = 9;
+
+#define LED_PIN A2

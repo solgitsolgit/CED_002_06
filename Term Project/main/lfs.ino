@@ -64,7 +64,7 @@ bool lt_isLeft()    { return (analogRead(LT_MODULE_L) > THRESHOLD); }
 bool lt_isForward() { return (analogRead(LT_MODULE_F) > THRESHOLD); }
 bool lt_isRight()   { return (analogRead(LT_MODULE_R) > THRESHOLD); }
 
-void lt_mode_update()
+bool lt_mode_update()
 {
   bool ll = lt_isLeft();
   bool ff = lt_isForward();
@@ -118,10 +118,13 @@ void lt_mode_update()
       }
       // 0.2초가 지났는데도 선이 안 나타나면 "아, 진짜 막다른 길이구나" -> 유턴
       else {
-        g_carDirection = CAR_DIR_UT; 
+        bool flag = (g_carDirection != CAR_DIR_UT);
+        g_carDirection = CAR_DIR_UT;
+        return flag;
       }
     }
   }
+  return false;
 }
 
 
@@ -165,10 +168,11 @@ void car_update()
 
 
 // ================= 7. 메인 루프 =================
-void lfsUpdate(){
+bool lfsUpdate(){
   stop_cnt++;
+  bool ret = false;
   if (stop_cnt <3){
-  lt_mode_update(); // 센서 판단 및 방향 결정
+  ret = lt_mode_update(); // 센서 판단 및 방향 결정
   car_update();     // 모터 구동
   
   // 딜레이를 최소화하여 반응 속도 향상 (10ms 권장)
@@ -178,5 +182,7 @@ void lfsUpdate(){
     stop_cnt = 0;
     g_carDirection = CAR_DIR_ST;
     car_update();
-  } 
+  }
+
+  return ret;
 }

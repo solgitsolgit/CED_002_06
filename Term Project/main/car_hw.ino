@@ -6,11 +6,6 @@
 
 #include "car_hw.h"
 
-SoftwareSerial btSerial(BT_RX, BT_TX);
-
-// LCD
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
 void InitHW() {
     // Motor Pin
     pinMode(ENA, OUTPUT);
@@ -34,14 +29,25 @@ void InitHW() {
     // Photo Sensor Pin
     pinMode(PhotoSensor, INPUT);
 
+    pinMode(LED_PIN, OUTPUT); // LED Pin
+
     // Communication Initialization
     Serial.begin(9600); // PC Serial
-    btSerial.begin(9600); // Bluetooth
+}
 
-    // LCD
-    lcd.init();
-    lcd.backlight();
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("System Ready");
+// Read Photo Sensor
+int ReadPhotoSensor() {
+    return analogRead(PhotoSensor);
+}
+
+// Check if it's Dark
+bool IsDark() {
+    int sensorValue = ReadPhotoSensor();
+    //Serial.print("Photo Sensor Value: ");
+    //Serial.println(sensorValue);
+    bool ret  =sensorValue < PhotoThreshold;
+    //Serial.print(", IsDark:");
+    //Serial.println(ret);
+    //Serial.println("\n");
+    return ret;
 }

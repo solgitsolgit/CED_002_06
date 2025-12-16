@@ -4,21 +4,25 @@
 
 #include "lcd.h"
 
-// CarHW.ino에서 선언된 전역 LCD 인스턴스를 재사용
-//   LiquidCrystal_I2C lcd(0x27, 16, 2);
-extern LiquidCrystal_I2C lcd;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void lcdInit() {
     // CarHW.InitHW()에서 이미 init()을 호출하고 있을 수도 있지만,
     // 모듈 독립성을 위해 여기서도 한 번 더 안전하게 초기화해준다.
+    // LCD
     lcd.init();
     lcd.backlight();
     lcd.clear();
-
     lcd.setCursor(0, 0);
     lcd.print("System Ready");
+}
+
+void lcdDisplayMessage(const char* line1, const char* line2) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(line1);
     lcd.setCursor(0, 1);
-    lcd.print("ANS: --");
+    lcd.print(line2);
 }
 
 void lcdPrintAnswer(int cellIndex) {
