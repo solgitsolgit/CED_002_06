@@ -51,3 +51,11 @@ bool IsDark() {
     //Serial.println("\n");
     return ret;
 }
+
+void LED_On() {
+    digitalWrite(LED_PIN, HIGH);
+}
+
+void LED_Off() {
+    digitalWrite(LED_PIN, LOW);
+}

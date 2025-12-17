@@ -11,10 +11,6 @@
 #include "lcd.h"         // lcdInit(), lcdPrintAnswer()
 #include "bt.h"          // btInit(), btPollCommand()
 
-// 블루투스는 car_hw.ino에서 SoftwareSerial btSerial(...) 로 이미 선언/초기화됨
-// 여기서 extern으로 가져다 씀
-#include <SoftwareSerial.h>
-extern SoftwareSerial btSerial;
 
 Mode gMode      = MODE_LFS;   // 현재 모드
 Mode gPrevMode  = MODE_LFS;   // 이전 모드 (모드 전환 감지용)
@@ -23,30 +19,32 @@ bool gTttDone   = false;      // MODE_TTT에서 Dummy 동작이 끝났는지
 BoardState board;
 bool isUturn;
 
-void solveTTT(void) {
+static bool btLocked = false;
 
-  int myMoves[5] = {0};
-  int myMoveCount = 0;
-
-  btReadNumbersLineBlocking(myMoveCount, myMoves, 9);
-
-  int ans = runTicTacToe(board, myMoves, myMoveCount);
-}
-
-// ================== 블루투스 입력 처리 ==================
-//
-// 현재는 **아주 단순 문자 기반** 프로토콜:
-//  - 'l' : LFS 모드로 전환
-//  - 't' : 틱택토 모드로 전환
-// (원하면 'g', 's' 등으로 마음대로 바꿔도 됨)
-// ========================================================
+int myMoveCount = 0;
+int myMoves[9] = {0};
 
 void handleBluetooth() {
-  Mode tempMode = btPollCommand();
-  if (tempMode != MODE_NULL){
-    gMode = tempMode;
+  Mode temp = btPollCommand(&myMoveCount, myMoves, 9);
+  if (temp != MODE_NULL) {
+    gMode = temp;
+
+    // ===== 디버깅 출력 =====
+    if (gMode == MODE_TTT) {
+      Serial.println("[BT] MODE_TTT received");
+      Serial.print("[BT] myMoveCount = ");
+      Serial.println(myMoveCount);
+
+      Serial.print("[BT] myMoves = ");
+      for (int i = 0; i < myMoveCount; i++) {
+        Serial.print(myMoves[i]);
+        if (i + 1 < myMoveCount) Serial.print(", ");
+      }
+      Serial.println();
+    }
   }
 }
+
 
 // ================== setup / loop ==================
 
@@ -65,38 +63,46 @@ void setup() {
 }
 
 void loop() {
-  // 1. 항상 가장 먼저 BT 입력 확인해서 모드 전환
-  //if (gMode != MODE_TTT && gMode != MODE_TTT_MAN) {
-  handleBluetooth();
-  //}
+  if (!btLocked) {
+    handleBluetooth();
+  }
   bool isDark = IsDark();
 
   // 2. 모드가 바뀌었는지 확인 (mode enter 시점 처리)
   if (gMode != gPrevMode) {
+    if (gPrevMode != MODE_STOP){
+      LED_Off();
+    }
     Serial.print("[MODE] Change ->");
     if (gMode == MODE_LFS) {
       Serial.println("LFS");
+      LED_Off();
       lfsInit();        // LFS 상태 재초기화 (필요시)
       StopCar();        // 안전하게 정지 후 시작
     }
     else if (gMode == MODE_STOP){
       Serial.println("STOP");
+      LED_On();
       StopCar();        // 모드 전환 시 항상 정지
     }
 
     else if (gMode == MODE_SCAN) {
+      LED_Off();
       Serial.println("SCAN");
       isUturn = false;
       StopCar();        // 모드 전환 시 항상 정지
     }
 
     else if (gMode == MODE_TTT) {
+      btLocked = true; // TTT 모드 진입 시 BT 잠금
+      LED_Off();
       Serial.println("TTT_Solve");
       gTttDone = false;
-      StopCar();        // 모드 전환 시 항상 정지
+      StopCar();
     }
 
     else if (gMode == MODE_TTT_MAN){
+      LED_Off();
       Serial.println("TTT_Manual");
       StopCar();        // 모드 전환 시 항상 정지
     }
@@ -107,7 +113,7 @@ void loop() {
 
   // 3. 현재 모드에 따라 동작
   switch (gMode) {
-    case MODE_LFS:
+    case MODE_LFS:{
       // LFS 모드: 계속 라인트레이싱 주행
       if (!isDark){
         lfsUpdate();
@@ -116,33 +122,43 @@ void loop() {
         StopCar();
       }
       break;
+    }
 
-    case MODE_STOP:
+    case MODE_STOP:{
       StopCar();
       break;
+    }
     
-    case MODE_SCAN:
+    case MODE_SCAN:{
     // Implement scan mode
       isUturn = lfsUpdate();
       float ld = usReadLeftCm();
+      delay(10);
       float rd = usReadRightCm();
       tttScanBoard(board, isUturn, rd, ld);
+      Serial.println("SCAN L:" + String(ld) + " R:" + String(rd));
       break;
+    }
 
-    case MODE_TTT:
+    case MODE_TTT:{
+      Serial.println("[TTT] Solving...");
       StopCar();
-      if (!gTttDone) {
-        solveTTT();
-        gTttDone = true;
+      int ans = solveTTT(board, myMoves, myMoveCount);
+      Serial.println("[TTT] Answer: " + String(ans));
+      gTttDone = true;
 
-        delay(1000);
-        gMode = MODE_STOP;
-      }
-      // 이후에는 제자리에서 아무것도 안 함 (필요하면 정지 유지)
+      btLocked = false;
       break;
+    }
 
-    default:
-      gMode = MODE_STOP;
+    default:{
+      StopCar();
+      break;
+    }
+  }
+
+  if (gMode == MODE_TTT && gTttDone) {
+    gMode = MODE_STOP;
   }
 
   // 필요시 아주 짧은 delay (너무 빡빡하면 Serial 출력이 꼬일 수 있음)

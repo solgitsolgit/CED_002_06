@@ -11,140 +11,135 @@ void btInit() {
     btSerial.begin(9600); // Bluetooth
 }
 
-// 문자 기반 명령 수신
-//  - 데이터가 없으면 BT_CMD_NONE
-//  - 's' → STOP
-//  - 'g' → START
-Mode btPollCommand() {
-    if (btSerial.available() > 0) {
-        char c = btSerial.read();
+static const unsigned long BT_LINE_TIMEOUT_MS = 3000; // 3초 타임아웃(필요시 조정)
 
-        // 디버깅이 필요하면 PC 시리얼로 에코 가능:
-        // Serial.print("[BT RX]: ");
-        // Serial.println(c);
+// 한 줄 읽기: \n 또는 \r에서 종료. 공백은 유지/제거 선택 가능.
+// 반환: true면 buf에 한 줄 완성, false면 타임아웃/실패
+static bool btReadLine(char* buf, int bufSize) {
+    if (buf == nullptr || bufSize <= 1) return false;
 
-        if (c == '0') {
-            lcdDisplayMessage("[BTRX] 0", " ");
-            return MODE_LFS;
-        }
-        if (c == '1') {
-            lcdDisplayMessage("[BTRX] 1", " ");
-            return MODE_STOP;
-        }
-        if (c == '2') {
-            lcdDisplayMessage("[BTRX] 2", " ");
-            return MODE_SCAN;
-        }
-        if (c == '3') {
-            lcdDisplayMessage("[BTRX] 3", " ");
-            return MODE_TTT;
-        }
-        if (c == '4') {
-            lcdDisplayMessage("[BTRX] 4", " ");
-            return MODE_TTT_MAN;
-        }
-        Serial.print("[BT] Unknown command: ");
-    }
-
-    return MODE_NULL;
-}
-
-// 틱택토 위치 수신 (숫자 하나)
-//  - '1' ~ '9' 문자 들어오면 true + outCellIndex에 1~9 저장
-//  - 그 외/없으면 false
-bool btReadMove(int* outCellIndex) {
-    if (outCellIndex == nullptr) return false;
-
-    if (btSerial.available() > 0) {
-        char c = btSerial.read();
-
-        if (c >= '1' && c <= '9') {
-            *outCellIndex = c - '0';  // 문자 → 정수
-            return true;
-        }
-        // 숫자가 아니면 무시
-    }
-
-    return false;
-}
-
-// ==============================
-// BT 다중 숫자 입력 함수
-// ==============================
-bool btReadNumbersLineBlocking(int& count, int outArr[], int maxLen) {
-    if (outArr == nullptr || maxLen <= 0) {
-        count = 0;
-        return false;
-    }
-
-    // 1) 한 줄을 받을 버퍼
-    //    (너무 길게 받을 필요 없음: 최대 "9" + 숫자 9개 + 여분)
-    char buf[32];
     int idx = 0;
+    unsigned long start = millis();
 
-    // 안내 표시 (원하면 제거 가능)
-    lcdDisplayMessage("[BT] Input...", "Send: Nxxxxx");
-
-    // 2) 줄바꿈이 들어올 때까지 blocking으로 읽기
     while (true) {
-        // 데이터 올 때까지 대기
-        while (btSerial.available() <= 0) { /* wait */ }
+        // 타임아웃
+        if (millis() - start > BT_LINE_TIMEOUT_MS) {
+            buf[0] = '\0';
+            return false;
+        }
+
+        if (btSerial.available() <= 0) {
+            delay(1);
+            continue;
+        }
 
         char c = (char)btSerial.read();
 
-        // 줄바꿈이면 입력 종료
+        // 줄 종료
         if (c == '\n' || c == '\r') {
             break;
         }
 
-        // 공백/탭은 무시
+        // (선택) 공백/탭 무시
         if (c == ' ' || c == '\t') continue;
 
-        // 버퍼에 저장 (오버플로 방지)
-        if (idx < (int)sizeof(buf) - 1) {
+        if (idx < bufSize - 1) {
             buf[idx++] = c;
         }
     }
+
     buf[idx] = '\0';
+    return (idx > 0);
+}
 
-    // 3) 파싱: 첫 글자는 "개수"
-    if (idx <= 0 || buf[0] < '0' || buf[0] > '9') {
-        count = 0;
-        lcdDisplayMessage("[BT] ERR", "Bad format");
-        return false;
+void btFlushInput(unsigned long ms) {
+    unsigned long start = millis();
+    while (millis() - start < ms) {
+        while (btSerial.available() > 0) btSerial.read();
+        delay(1);
+    }
+}
+
+// 입력 포맷(권장):
+// 0\n  -> MODE_LFS
+// 1\n  -> MODE_STOP
+// 2\n  -> MODE_SCAN
+// 4\n  -> MODE_TTT_MAN
+//
+// 3|N|a1|a2|...|aN\n  -> MODE_TTT + outCount/outMoves 채움
+// 예: 3|4|1|2|5|7\n
+Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
+    // 입력이 아예 없으면 MODE_NULL
+    if (btSerial.available() <= 0) return MODE_NULL;
+
+    char line[64];
+    if (!btReadLine(line, sizeof(line))) {
+        return MODE_NULL; // 타임아웃/실패면 아무 것도 안 함
     }
 
-    int expected = buf[0] - '0';
-    if (expected > maxLen) expected = maxLen;
+    // line[0] = 모드 문자
+    char modeChar = line[0];
 
-    // 4) 뒤에서 숫자(1~9)를 expected개 만큼 읽기
-    int got = 0;
-    for (int i = 1; buf[i] != '\0' && got < expected; i++) {
-        char c = buf[i];
-        if (c >= '1' && c <= '9') {
-            outArr[got++] = c - '0';
+    // 간단 모드
+    if (modeChar == '0') { lcdDisplayMessage("[BTRX] 0", " "); return MODE_LFS; }
+    if (modeChar == '1') { lcdDisplayMessage("[BTRX] 1", " "); return MODE_STOP; }
+    if (modeChar == '2') { lcdDisplayMessage("[BTRX] 2", " "); return MODE_SCAN; }
+    if (modeChar == '4') { lcdDisplayMessage("[BTRX] 4", " "); return MODE_TTT_MAN; }
+
+    // MODE_TTT: 3|N|a1|a2|...
+    if (modeChar == '3') {
+        lcdDisplayMessage("[BTRX] 3", "TTT data");
+
+        if (outCount) *outCount = 0;
+        if (outMoves && outMax > 0) {
+            for (int i = 0; i < outMax; i++) outMoves[i] = 0;
         }
-        // 그 외 문자는 무시 (예: 쉼표 등)
+
+        // line을 토큰화하기 위해 복사본 사용
+        char tmp[64];
+        strncpy(tmp, line, sizeof(tmp));
+        tmp[sizeof(tmp) - 1] = '\0';
+
+        // strtok로 '|' 기준 파싱
+        // 토큰1: "3"
+        // 토큰2: N
+        // 토큰3..: moves
+        char* saveptr = nullptr;
+        char* tok = strtok_r(tmp, "|", &saveptr);
+        if (!tok) return MODE_TTT;
+
+        tok = strtok_r(nullptr, "|", &saveptr); // N
+        if (!tok) return MODE_TTT;
+
+        int N = atoi(tok);
+        if (N < 0) N = 0;
+        if (N > outMax) N = outMax;
+
+        int got = 0;
+        while (got < N) {
+            tok = strtok_r(nullptr, "|", &saveptr);
+            if (!tok) break;
+
+            int v = atoi(tok);
+            if (v >= 1 && v <= 9) {
+                outMoves[got++] = v;
+            } else {
+                // 범위 밖 값은 무시 (또는 실패 처리 가능)
+            }
+        }
+
+        if (outCount) *outCount = got;
+
+        // LCD에 간단 표시
+        char l2[17];
+        snprintf(l2, sizeof(l2), "N=%d got=%d", N, got);
+        lcdDisplayMessage("TTT RX", l2);
+
+        return MODE_TTT;
     }
 
-    // 5) 결과 처리
-    if (got != expected) {
-        // 입력이 모자랐다면: (정책 1) 실패로 처리
-        // 또는 (정책 2) got만큼으로 count를 줄여서 진행 가능
-        // 여기서는 안전하게 "실패"로 하고 다시 입력받게 하는 걸 추천.
-        count = got;
-        char line2[17];
-        snprintf(line2, sizeof(line2), "need %d got %d", expected, got);
-        lcdDisplayMessage("[BT] ERR", line2);
-        return false;
-    }
-
-    count = expected;
-
-    // LCD 확인 표시
-    char line2[17];
-    snprintf(line2, sizeof(line2), "OK cnt=%d", count);
-    lcdDisplayMessage("[BT] DONE", line2);
-
-    return true;
+    // 알 수 없는 입력
+    Serial.print("[BT] Unknown line: ");
+    Serial.println(line);
+    return MODE_NULL;
 }

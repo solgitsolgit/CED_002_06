@@ -142,7 +142,7 @@ void car_update()
     digitalWrite(EN1, LOW);  digitalWrite(EN2, HIGH); // 왼쪽 후진
     digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW);  // 오른쪽 전진
     analogWrite(ENA, speed); analogWrite(ENB, speed);
-    delay(90);
+    delay(110);
   }
   else if (g_carDirection == CAR_DIR_RF) // [우회전] (제자리 회전)
   {

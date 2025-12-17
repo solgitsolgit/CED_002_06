@@ -9,3 +9,7 @@ int ReadPhotoSensor();
 
 // Check if it's Dark
 bool IsDark();
+
+void LED_On();
+
+void LED_Off();

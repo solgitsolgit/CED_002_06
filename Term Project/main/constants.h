@@ -20,7 +20,7 @@ const int LT_THRESHOLD = 200;
 // Ultrasonic Sensor
 const int L_Trig = 10;
 const int L_Echo = 11;
-const int R_Trig = 12;
+const int R_Trig = 10;
 const int R_Echo = 13;
 
 // Photo Sensor
@@ -31,4 +31,4 @@ const int PhotoThreshold = 300;
 const int BT_RX = 8;
 const int BT_TX = 9;
 
-#define LED_PIN A2
+#define LED_PIN 12
