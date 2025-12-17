@@ -90,5 +90,5 @@ int runTicTacToe(const BoardState& board,
 
 int solveTTT(BoardState& board, int myMoves[], int myMoveCount) {
   int ans = runTicTacToe(board, myMoves, myMoveCount);
-  
+  return ans;
 }

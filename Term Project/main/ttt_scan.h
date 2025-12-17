@@ -10,4 +10,4 @@ void tttScanInit(BoardState &board);
 // 틱택토 보드 9칸을 탐색해서 board에 채운다.
 //  - CELL_OTHER: 상대 말(종이컵) 있다고 판단
 //  - CELL_EMPTY: 빈 칸
-void tttScanBoard(BoardState &board, bool isUturn, float rd, float ld);
+bool tttScanBoard(BoardState &board, bool isUturn, float rd, float ld);

@@ -102,11 +102,11 @@ void loop() {
     }
 
     else if (gMode == MODE_TTT_MAN){
+      btLocked = true;
       LED_Off();
       Serial.println("TTT_Manual");
       StopCar();        // 모드 전환 시 항상 정지
     }
-    Serial.println("\n");
     
     gPrevMode = gMode;
   }
@@ -135,8 +135,17 @@ void loop() {
       float ld = usReadLeftCm();
       delay(10);
       float rd = usReadRightCm();
-      tttScanBoard(board, isUturn, rd, ld);
-      Serial.println("SCAN L:" + String(ld) + " R:" + String(rd));
+      bool isScanDone = tttScanBoard(board, isUturn, rd, ld);
+      //Serial.println("SCAN L:" + String(ld) + " R:" + String(rd));
+      if (isScanDone) {
+        Serial.println("[SCAN] Done. Board state:");
+        for (int i = 0; i < 9; ++i) {
+          Serial.print(String(board.cell[i]) + " ");
+        }
+        Serial.println();
+        gMode = MODE_STOP;
+      }
+      
       break;
     }
 
@@ -151,13 +160,34 @@ void loop() {
       break;
     }
 
+    case MODE_TTT_MAN:{
+      Serial.println("[TTT] Solving...");
+      StopCar();
+      int myMove_man = 0;
+      int myMoves_man[9] = {0};
+
+      for (int i = 0; i < 9; i++) {
+        board.cell[i] = myMoves[i];
+        if (myMoves[i] == BoardState::CELL_MINE) {
+          myMoves_man[myMove_man++] = i+1;
+      }
+    }
+
+      int ans = runTicTacToe(board, myMoves_man, myMove_man);
+      Serial.println("[TTT] Answer: " + String(ans));
+      gTttDone = true;
+
+      btLocked = false;
+      break;
+    }
+
     default:{
       StopCar();
       break;
     }
   }
 
-  if (gMode == MODE_TTT && gTttDone) {
+  if ((gMode == MODE_TTT && gTttDone) || (gMode == MODE_TTT_MAN)) {
     gMode = MODE_STOP;
   }
 

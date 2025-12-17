@@ -69,24 +69,23 @@ void btFlushInput(unsigned long ms) {
 // 3|N|a1|a2|...|aN\n  -> MODE_TTT + outCount/outMoves 채움
 // 예: 3|4|1|2|5|7\n
 Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
-    // 입력이 아예 없으면 MODE_NULL
     if (btSerial.available() <= 0) return MODE_NULL;
 
     char line[64];
     if (!btReadLine(line, sizeof(line))) {
-        return MODE_NULL; // 타임아웃/실패면 아무 것도 안 함
+        return MODE_NULL;
     }
 
-    // line[0] = 모드 문자
     char modeChar = line[0];
 
-    // 간단 모드
+    // ---- 단순 모드 ----
     if (modeChar == '0') { lcdDisplayMessage("[BTRX] 0", " "); return MODE_LFS; }
     if (modeChar == '1') { lcdDisplayMessage("[BTRX] 1", " "); return MODE_STOP; }
     if (modeChar == '2') { lcdDisplayMessage("[BTRX] 2", " "); return MODE_SCAN; }
-    if (modeChar == '4') { lcdDisplayMessage("[BTRX] 4", " "); return MODE_TTT_MAN; }
 
-    // MODE_TTT: 3|N|a1|a2|...
+    // =========================================================
+    // MODE_TTT (3): 3|N|a1|a2|...
+    // =========================================================
     if (modeChar == '3') {
         lcdDisplayMessage("[BTRX] 3", "TTT data");
 
@@ -95,20 +94,15 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
             for (int i = 0; i < outMax; i++) outMoves[i] = 0;
         }
 
-        // line을 토큰화하기 위해 복사본 사용
         char tmp[64];
         strncpy(tmp, line, sizeof(tmp));
         tmp[sizeof(tmp) - 1] = '\0';
 
-        // strtok로 '|' 기준 파싱
-        // 토큰1: "3"
-        // 토큰2: N
-        // 토큰3..: moves
         char* saveptr = nullptr;
-        char* tok = strtok_r(tmp, "|", &saveptr);
+        char* tok = strtok_r(tmp, "|", &saveptr); // "3"
         if (!tok) return MODE_TTT;
 
-        tok = strtok_r(nullptr, "|", &saveptr); // N
+        tok = strtok_r(nullptr, "|", &saveptr);   // N
         if (!tok) return MODE_TTT;
 
         int N = atoi(tok);
@@ -123,14 +117,11 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
             int v = atoi(tok);
             if (v >= 1 && v <= 9) {
                 outMoves[got++] = v;
-            } else {
-                // 범위 밖 값은 무시 (또는 실패 처리 가능)
             }
         }
 
         if (outCount) *outCount = got;
 
-        // LCD에 간단 표시
         char l2[17];
         snprintf(l2, sizeof(l2), "N=%d got=%d", N, got);
         lcdDisplayMessage("TTT RX", l2);
@@ -138,7 +129,40 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
         return MODE_TTT;
     }
 
-    // 알 수 없는 입력
+    // =========================================================
+    // MODE_TTT_MAN (4): 4|012102200  (9 chars: 0/1/2)
+    // =========================================================
+    if (modeChar == '4') {
+        lcdDisplayMessage("[BTRX] 4", "TTT MAN");
+
+        if (!outMoves || outMax < 9) {
+            if (outCount) *outCount = 0;
+            return MODE_TTT_MAN;
+        }
+
+        // line 예: "4|012102200" 또는 "4012102200"
+        const char* p = line + 1;
+        if (*p == '|') p++;   // '|' 있으면 스킵
+
+        int got = 0;
+        while (*p && got < 9) {
+            if (*p == '0' || *p == '1' || *p == '2') {
+                outMoves[got++] = *p - '0';
+            }
+            p++;
+        }
+
+        if (outCount) *outCount = got;
+
+        // LCD 표시
+        char l2[17];
+        snprintf(l2, sizeof(l2), "cells=%d", got);
+        lcdDisplayMessage("TTT MAN RX", l2);
+
+        return MODE_TTT_MAN;
+    }
+
+    // ---- 알 수 없는 입력 ----
     Serial.print("[BT] Unknown line: ");
     Serial.println(line);
     return MODE_NULL;

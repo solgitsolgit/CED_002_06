@@ -142,7 +142,7 @@ void car_update()
     digitalWrite(EN1, LOW);  digitalWrite(EN2, HIGH); // 왼쪽 후진
     digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW);  // 오른쪽 전진
     analogWrite(ENA, speed); analogWrite(ENB, speed);
-    delay(110);
+    delay(100);
   }
   else if (g_carDirection == CAR_DIR_RF) // [우회전] (제자리 회전)
   {
@@ -152,9 +152,8 @@ void car_update()
   }
   else if (g_carDirection == CAR_DIR_UT) // [유턴] (강한 제자리 회전)
   {
-    // 좌회전과 동일한 메커니즘으로 180도 회전 시도
-    digitalWrite(EN1, LOW);  digitalWrite(EN2, HIGH); 
-    digitalWrite(EN3, HIGH); digitalWrite(EN4, LOW);  
+    digitalWrite(EN1, HIGH); digitalWrite(EN2, LOW);  // 왼쪽 전진
+    digitalWrite(EN3, LOW);  digitalWrite(EN4, HIGH); // 오른쪽 후진
     analogWrite(ENA, speed); analogWrite(ENB, speed);
   }
   else // [정지] (CAR_DIR_ST)
@@ -171,7 +170,7 @@ void car_update()
 bool lfsUpdate(){
   stop_cnt++;
   bool ret = false;
-  if (stop_cnt <3){
+  if (stop_cnt < 3){
   ret = lt_mode_update(); // 센서 판단 및 방향 결정
   car_update();     // 모터 구동
   
@@ -179,9 +178,9 @@ bool lfsUpdate(){
   }
   //delay(100);
   else{
-    stop_cnt = 0;
     g_carDirection = CAR_DIR_ST;
     car_update();
+    stop_cnt = 0;
   }
 
   return ret;
