@@ -3,18 +3,14 @@
 #include "constants.h"
 #include "lcd.h"
 
-// btSerial은 CarHW.ino에서 생성 & begin()까지 완료되어 있음.
-// 여기서는 extern으로 가져와서 "읽기"만 한다.
 SoftwareSerial btSerial(BT_RX, BT_TX);
 
 void btInit() {
-    btSerial.begin(9600); // Bluetooth
+    btSerial.begin(9600);
 }
 
 static const unsigned long BT_LINE_TIMEOUT_MS = 3000; // 3초 타임아웃(필요시 조정)
 
-// 한 줄 읽기: \n 또는 \r에서 종료. 공백은 유지/제거 선택 가능.
-// 반환: true면 buf에 한 줄 완성, false면 타임아웃/실패
 static bool btReadLine(char* buf, int bufSize) {
     if (buf == nullptr || bufSize <= 1) return false;
 
@@ -22,7 +18,6 @@ static bool btReadLine(char* buf, int bufSize) {
     unsigned long start = millis();
 
     while (true) {
-        // 타임아웃
         if (millis() - start > BT_LINE_TIMEOUT_MS) {
             buf[0] = '\0';
             return false;
@@ -35,12 +30,10 @@ static bool btReadLine(char* buf, int bufSize) {
 
         char c = (char)btSerial.read();
 
-        // 줄 종료
         if (c == '\n' || c == '\r') {
             break;
         }
 
-        // (선택) 공백/탭 무시
         if (c == ' ' || c == '\t') continue;
 
         if (idx < bufSize - 1) {
@@ -60,14 +53,6 @@ void btFlushInput(unsigned long ms) {
     }
 }
 
-// 입력 포맷(권장):
-// 0\n  -> MODE_LFS
-// 1\n  -> MODE_STOP
-// 2\n  -> MODE_SCAN
-// 4\n  -> MODE_TTT_MAN
-//
-// 3|N|a1|a2|...|aN\n  -> MODE_TTT + outCount/outMoves 채움
-// 예: 3|4|1|2|5|7\n
 Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
     if (btSerial.available() <= 0) return MODE_NULL;
 
@@ -78,14 +63,10 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
 
     char modeChar = line[0];
 
-    // ---- 단순 모드 ----
     if (modeChar == '0') { lcdDisplayMessage("[BTRX] 0", " "); return MODE_LFS; }
     if (modeChar == '1') { lcdDisplayMessage("[BTRX] 1", " "); return MODE_STOP; }
     if (modeChar == '2') { lcdDisplayMessage("[BTRX] 2", " "); return MODE_SCAN; }
 
-    // =========================================================
-    // MODE_TTT (3): 3|N|a1|a2|...
-    // =========================================================
     if (modeChar == '3') {
         lcdDisplayMessage("[BTRX] 3", "TTT data");
 
@@ -129,9 +110,6 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
         return MODE_TTT;
     }
 
-    // =========================================================
-    // MODE_TTT_MAN (4): 4|012102200  (9 chars: 0/1/2)
-    // =========================================================
     if (modeChar == '4') {
         lcdDisplayMessage("[BTRX] 4", "TTT MAN");
 
@@ -140,9 +118,8 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
             return MODE_TTT_MAN;
         }
 
-        // line 예: "4|012102200" 또는 "4012102200"
         const char* p = line + 1;
-        if (*p == '|') p++;   // '|' 있으면 스킵
+        if (*p == '|') p++;  
 
         int got = 0;
         while (*p && got < 9) {
@@ -154,7 +131,6 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
 
         if (outCount) *outCount = got;
 
-        // LCD 표시
         char l2[17];
         snprintf(l2, sizeof(l2), "cells=%d", got);
         lcdDisplayMessage("TTT MAN RX", l2);
@@ -162,7 +138,6 @@ Mode btPollCommand(int* outCount, int outMoves[], int outMax) {
         return MODE_TTT_MAN;
     }
 
-    // ---- 알 수 없는 입력 ----
     Serial.print("[BT] Unknown line: ");
     Serial.println(line);
     return MODE_NULL;

@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 
-// Motor Driver
 const int ENA = 6; // Left Motor
 const int EN1 = 7;
 const int EN2 = 3;
@@ -17,13 +16,13 @@ const int LT_MODULE_F = A1;
 const int LT_MODULE_R = A0;
 const int LT_THRESHOLD = 200;
 
-// Ultrasonic Sensor
+//초음파
 const int L_Trig = 10;
 const int L_Echo = 11;
 const int R_Trig = 10;
 const int R_Echo = 13;
 
-// Photo Sensor
+//조도
 const int PhotoSensor = A3;
 const int PhotoThreshold = 300;
 
